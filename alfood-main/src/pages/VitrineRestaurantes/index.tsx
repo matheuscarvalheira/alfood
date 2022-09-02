@@ -1,8 +1,8 @@
 import React from 'react';
-import Banner from '../../componentes/Banner';
-import ListaRestaurantes from '../../componentes/ListaRestaurantes';
-import NavBar from '../../componentes/NavBar';
-import Rodape from '../../componentes/Rodape';
+import Banner from '../../components/Banner';
+import ListaRestaurantes from '../../components/ListaRestaurantes';
+import NavBar from '../../components/NavBar';
+import Rodape from '../../components/Rodape';
 
 function App() {
   return (
