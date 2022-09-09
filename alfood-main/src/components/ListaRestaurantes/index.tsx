@@ -1,32 +1,51 @@
-import { Button } from "@mui/material";
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import { useEffect, useState } from "react";
 import { IPaginacao } from "../../interfaces/IPaginacao";
 import IRestaurante from "../../interfaces/IRestaurante";
 import style from "./ListaRestaurantes.module.scss";
 import Restaurante from "./Restaurante";
 
+// esses são os possíveis parâmetros que podemos enviar para a API
+interface IParametrosBusca {
+  ordering?: string;
+  search?: string;
+}
+
 const ListaRestaurantes = () => {
   const [restaurantes, setRestaurantes] = useState<IRestaurante[]>([]);
   const [proximaPagina, setProximaPagina] = useState("");
   const [paginaAnterior, setPaginaAnterior] = useState("");
 
-  const carregarDados = (url: string) => {
+  const [busca, setBusca] = useState("");
+
+  // agora, o carregarDados recebe opcionalmente as opções de configuração do axios
+  const carregarDados = (url: string, opcoes: AxiosRequestConfig = {}) => {
     axios
-      .get<IPaginacao<IRestaurante>>(url)
-      .then((response) => {
-        setRestaurantes(response.data.results);
-        setProximaPagina(response.data.next);
-        setPaginaAnterior(response.data.previous);
-        console.log(response.data)
+      .get<IPaginacao<IRestaurante>>(url, opcoes)
+      .then((resposta) => {
+        setRestaurantes(resposta.data.results);
+        setProximaPagina(resposta.data.next);
+        setPaginaAnterior(resposta.data.previous);
       })
-      .catch((error) => {
-        console.log(error);
+      .catch((erro) => {
+        console.log(erro);
       });
   };
 
+  // a cada busca, montamos um objeto de opções
+  const buscar = (evento: React.FormEvent<HTMLFormElement>) => {
+    evento.preventDefault();
+    const opcoes = {
+      params: {} as IParametrosBusca,
+    };
+    if (busca) {
+      opcoes.params.search = busca;
+    }
+    carregarDados("http://localhost:8000/api/v1/restaurantes/", opcoes);
+  };
+
   useEffect(() => {
-    //obter os restaurantes
+    // obter restaurantes
     carregarDados("http://localhost:8000/api/v1/restaurantes/");
   }, []);
 
@@ -35,28 +54,32 @@ const ListaRestaurantes = () => {
       <h1>
         Os restaurantes mais <em>bacanas</em>!
       </h1>
+      <form onSubmit={buscar}>
+        <input
+          type="text"
+          value={busca}
+          onChange={(evento) => setBusca(evento.target.value)}
+        />
+        <button type="submit">buscar</button>
+      </form>
       {restaurantes?.map((item) => (
         <Restaurante restaurante={item} key={item.id} />
       ))}
       {
-        <Button
-          onClick={() => {
-            carregarDados(paginaAnterior);
-          }}
-          variant="contained"
+        <button
+          onClick={() => carregarDados(paginaAnterior)}
+          disabled={!paginaAnterior}
         >
           Página Anterior
-        </Button>
+        </button>
       }
       {
-        <Button
-          onClick={() => {
-            carregarDados(proximaPagina);
-          }}
-          variant="contained"
+        <button
+          onClick={() => carregarDados(proximaPagina)}
+          disabled={!proximaPagina}
         >
           Próxima página
-        </Button>
+        </button>
       }
     </section>
   );
